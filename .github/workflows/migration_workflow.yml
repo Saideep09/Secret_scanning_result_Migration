@@ -18,11 +18,11 @@ jobs:
     - name: Validate PAT tokens
       run: |
         if [[ -z "${{ secrets.SOURCE_TOEKN }}" ]]; then
-          echo "Source PAT token is missing!"
+          echo "Source Token token is missing!"
           exit 1
         fi
         if [[ -z "${{ secrets.TARGET_TOKEN }}" ]]; then
-          echo "Target PAT token is missing!"
+          echo "Target Token token is missing!"
           exit 1
         fi
       shell: bash

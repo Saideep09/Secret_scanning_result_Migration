@@ -27,33 +27,50 @@ jobs:
         fi
       shell: bash
 
-    - name: Extract source and target organization and repository from issue
-      id: extract_repos
-      run: |
-        sourceOrg=$(echo "${{ github.event.issue.body }}" | awk '/### Source Organization/{getline; print}')
-        sourceRepo=$(echo "${{ github.event.issue.body }}" | awk '/### Source Repository/{getline; print}')
-        targetOrg=$(echo "${{ github.event.issue.body }}" | awk '/### Target Organization/{getline; print}')
-        targetRepo=$(echo "${{ github.event.issue.body }}" | awk '/### Target Repository/{getline; print}')
+    - name: Get Issue Body
+      id: issue_body
+      uses: actions/github-script@v6
+      with:
+        script: |
+          const issueBody = context.payload.issue.body;
+          console.log("Issue Body: ", issueBody);
 
-        echo "sourceOrg=$sourceOrg" >> $GITHUB_ENV
-        echo "sourceRepo=$sourceRepo" >> $GITHUB_ENV
-        echo "targetOrg=$targetOrg" >> $GITHUB_ENV
-        echo "targetRepo=$targetRepo" >> $GITHUB_ENV
+          // Use regex to extract organization and repository names
+          const sourceOrgMatch = issueBody.match(/### Source Organization\s*\n*(.*)/);
+          const sourceRepoMatch = issueBody.match(/### Source Repository\s*\n*(.*)/);
+          const targetOrgMatch = issueBody.match(/### Target Organization\s*\n*(.*)/);
+          const targetRepoMatch = issueBody.match(/### Target Repository\s*\n*(.*)/);
 
-    - name: Print inputs
+          const sourceOrg = sourceOrgMatch ? sourceOrgMatch[1].trim() : "Not provided";
+          const sourceRepo = sourceRepoMatch ? sourceRepoMatch[1].trim() : "Not provided";
+          const targetOrg = targetOrgMatch ? targetOrgMatch[1].trim() : "Not provided";
+          const targetRepo = targetRepoMatch ? targetRepoMatch[1].trim() : "Not provided";
+
+          console.log("Source Organization: ", sourceOrg);
+          console.log("Source Repository: ", sourceRepo);
+          console.log("Target Organization: ", targetOrg);
+          console.log("Target Repository: ", targetRepo);
+
+          core.setOutput("source_org", sourceOrg);
+          core.setOutput("source_repo", sourceRepo);
+          core.setOutput("target_org", targetOrg);
+          core.setOutput("target_repo", targetRepo);
+
+    - name: Print Variables
       run: |
-        echo "Source Organization: ${{ env.sourceOrg }}"
-        echo "Source Repository: ${{ env.sourceRepo }}"
-        echo "Target Organization: ${{ env.targetOrg }}"
-        echo "Target Repository: ${{ env.targetRepo }}"
+        echo "Source Organization: ${{ steps.issue_body.outputs.source_org }}"
+        echo "Source Repository: ${{ steps.issue_body.outputs.source_repo }}"
+        echo "Target Organization: ${{ steps.issue_body.outputs.target_org }}"
+        echo "Target Repository: ${{ steps.issue_body.outputs.target_repo }}"
 
     - name: Run the PowerShell migration script
       run: |
-        pwsh ./scripts/migrate_secret_states.ps1 -sourceRepo "${{ env.sourceOrg }}/${{ env.sourceRepo }}" -targetRepo "${{ env.targetOrg }}/${{ env.targetRepo }}"
+        pwsh ./scripts/migrate_secret_states.ps1 -sourceRepo "${{ steps.issue_body.outputs.source_org }}/${{ steps.issue_body.outputs.source_repo }}" -targetRepo "${{ steps.issue_body.outputs.target_org }}/${{ steps.issue_body.outputs.target_repo }}"
       env:
         SOURCE_PAT: ${{ secrets.SOURCE_PAT }}
         TARGET_PAT: ${{ secrets.TARGET_PAT }}
 
+        
  # migration:
  #   runs-on: ubuntu-latest
  #   permissions:

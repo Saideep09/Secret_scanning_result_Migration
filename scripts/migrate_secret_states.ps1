@@ -1,17 +1,14 @@
 param (
-    [string]$sourceRepo,  # Source repository in 'owner/repo' format
-    [string]$targetRepo   # Target repository in 'owner/repo' format
+    [string]$sourceOrg,  # Source organization name
+    [string]$sourceRepo,  # Source repository name
+    [string]$targetOrg,  # Target organization name
+    [string]$targetRepo   # Target repository name
 )
 
-# Extract owner and repo names from the parameters
-$sourceRepoOwner, $sourceRepoName = $sourceRepo -split "/"
-$targetRepoOwner, $targetRepoName = $targetRepo -split "/"
-
-# Retrieve the PAT tokens from environment variables
+# Ensure both tokens are present
 $sourceToken = $env:SOURCE_PAT
 $targetToken = $env:TARGET_PAT
 
-# Ensure both tokens are present
 if (-not $sourceToken) {
     Write-Host "Source PAT token is missing!" -ForegroundColor Red
     exit 1
@@ -23,13 +20,13 @@ if (-not $targetToken) {
 }
 
 # Function to get secret scanning alerts from a repository
-function Get-SecretScanningAlerts($token, $repoOwner, $repoName) {
+function Get-SecretScanningAlerts($token, $org, $repo) {
     $headers = @{
         Authorization = "token $token"
         Accept        = "application/vnd.github.v3+json"
     }
 
-    $url = "https://api.github.com/repos/$repoOwner/$repoName/secret-scanning/alerts"
+    $url = "https://api.github.com/repos/$org/$repo/secret-scanning/alerts"
     try {
         $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
         return $response
@@ -40,7 +37,7 @@ function Get-SecretScanningAlerts($token, $repoOwner, $repoName) {
 }
 
 # Function to update secret scanning alerts in the target repository
-function Update-SecretScanningAlert($token, $repoOwner, $repoName, $alertNumber, $newState) {
+function Update-SecretScanningAlert($token, $org, $repo, $alertNumber, $newState) {
     $headers = @{
         Authorization = "token $token"
         Accept        = "application/vnd.github.v3+json"
@@ -50,7 +47,7 @@ function Update-SecretScanningAlert($token, $repoOwner, $repoName, $alertNumber,
         state = $newState
     } | ConvertTo-Json
 
-    $url = "https://api.github.com/repos/$repoOwner/$repoName/secret-scanning/alerts/$alertNumber"
+    $url = "https://api.github.com/repos/$org/$repo/secret-scanning/alerts/$alertNumber"
 
     try {
         Invoke-RestMethod -Uri $url -Headers $headers -Method Patch -Body $body
@@ -65,15 +62,15 @@ function Migrate-SecretScanningRemediationStates {
     param (
         [string]$sourceToken,
         [string]$targetToken,
-        [string]$sourceRepoOwner,
-        [string]$sourceRepoName,
-        [string]$targetRepoOwner,
-        [string]$targetRepoName
+        [string]$sourceOrg,
+        [string]$sourceRepo,
+        [string]$targetOrg,
+        [string]$targetRepo
     )
 
     # Get secret scanning alerts from the source repository
-    Write-Host "Fetching secret scanning alerts from source repository ($sourceRepoOwner/$sourceRepoName)..."
-    $sourceAlerts = Get-SecretScanningAlerts -token $sourceToken -repoOwner $sourceRepoOwner -repoName $sourceRepoName
+    Write-Host "Fetching secret scanning alerts from source repository ($sourceOrg/$sourceRepo)..."
+    $sourceAlerts = Get-SecretScanningAlerts -token $sourceToken -org $sourceOrg -repo $sourceRepo
 
     if ($sourceAlerts -eq $null -or $sourceAlerts.Count -eq 0) {
         Write-Host "No secret scanning alerts found in the source repository. Nothing to migrate." -ForegroundColor Yellow
@@ -90,17 +87,17 @@ function Migrate-SecretScanningRemediationStates {
         Write-Host "Migrating secret alert #$alertNumber with state '$alertState'..."
 
         # Update the alert in the target repository with the same state
-        Update-SecretScanningAlert -token $targetToken -repoOwner $targetRepoOwner -repoName $targetRepoName -alertNumber $alertNumber -newState $alertState
+        Update-SecretScanningAlert -token $targetToken -org $targetOrg -repo $targetRepo -alertNumber $alertNumber -newState $alertState
     }
 
     Write-Host "Secret scanning remediation states migrated successfully." -ForegroundColor Green
 }
 
 # Print inputs for logging
-Write-Host "Source Organization: $sourceRepoOwner"
-Write-Host "Source Repository: $sourceRepoName"
-Write-Host "Target Organization: $targetRepoOwner"
-Write-Host "Target Repository: $targetRepoName"
+Write-Host "Source Organization: $sourceOrg"
+Write-Host "Source Repository: $sourceRepo"
+Write-Host "Target Organization: $targetOrg"
+Write-Host "Target Repository: $targetRepo"
 
 # Call the migration function
-Migrate-SecretScanningRemediationStates -sourceToken $sourceToken -targetToken $targetToken -sourceRepoOwner $sourceRepoOwner -sourceRepoName $sourceRepoName -targetRepoOwner $targetRepoOwner -targetRepoName $targetRepoName
+Migrate-SecretScanningRemediationStates -sourceToken $sourceToken -targetToken $targetToken -sourceOrg $sourceOrg -sourceRepo $sourceRepo -targetOrg $targetOrg -targetRepo $targetRepo

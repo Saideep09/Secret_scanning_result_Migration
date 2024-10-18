@@ -31,7 +31,7 @@ function Get-SecretScanningAlerts($token, $org, $repo) {
         $response = Invoke-RestMethod -Uri $url -Headers $headers -Method Get
         return $response
     } catch {
-        Write-Host "Error fetching secret scanning alerts: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error fetching secret scanning alerts: $(${($_.Exception.Message)})" -ForegroundColor Red
         return $null
     }
 }
@@ -53,7 +53,7 @@ function Update-SecretScanningAlert($token, $org, $repo, $alertNumber, $newState
         Invoke-RestMethod -Uri $url -Headers $headers -Method Patch -Body $body
         Write-Host "Alert #$alertNumber updated to state '$newState'." -ForegroundColor Green
     } catch {
-        Write-Host "Error updating alert #$alertNumber: $($_.Exception.Message)" -ForegroundColor Red
+        Write-Host "Error updating alert #$alertNumber: $(${($_.Exception.Message)})" -ForegroundColor Red
     }
 }
 

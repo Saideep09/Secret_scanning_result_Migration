@@ -2,11 +2,10 @@ name: Migrate Repository-Level Secret scanning results remediation state
 
 on:
   issues:
-    types: [opened,edited]
+    types: [opened]
 
 jobs:
   migrate:
-    if: github.event.issue.title contains 'Migrate Secrets scanning results remediation state'
     runs-on: ubuntu-latest
 
     steps:
@@ -50,7 +49,6 @@ jobs:
         SOURCE_PAT: ${{ secrets.SOURCE_PAT }}
         TARGET_PAT: ${{ secrets.TARGET_PAT }}
 
-        
  # migration:
  #   runs-on: ubuntu-latest
  #   permissions:

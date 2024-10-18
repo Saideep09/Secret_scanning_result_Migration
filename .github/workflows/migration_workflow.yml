@@ -17,12 +17,12 @@ jobs:
 
     - name: Validate PAT tokens
       run: |
-        if [[ -z "${{ secrets.SOURCE_TOEKN }}" ]]; then
-          echo "Source Token is missing!"
+        if [[ -z "${{ secrets.SOURCE_PAT }}" ]]; then
+          echo "Source PAT is missing!"
           exit 1
         fi
-        if [[ -z "${{ secrets.TARGET_TOKEN }}" ]]; then
-          echo "Target Token is missing!"
+        if [[ -z "${{ secrets.TARGET_PAT }}" ]]; then
+          echo "Target PAT is missing!"
           exit 1
         fi
       shell: bash
@@ -65,5 +65,5 @@ jobs:
 
     - name: Run the PowerShell migration script
       run: |
-        ./secret_state_migration.ps1 -sourceOrg "${{ steps.issue_body.outputs.source_org }}" -sourceRepo "${{ steps.issue_body.outputs.source_repo }}" -targetOrg "${{ steps.issue_body.outputs.target_org }}" -targetRepo "${{ steps.issue_body.outputs.target_repo }}" -sourceToken "${{ secrets.SOURCE_PAT }}" -targetToken "${{ secrets.TARGET_PAT }}"
+        pwsh ./scripts/migrate_secret_states.ps1 -sourceOrg "${{ steps.issue_body.outputs.source_org }}" -sourceRepo "${{ steps.issue_body.outputs.source_repo }}" -targetOrg "${{ steps.issue_body.outputs.target_org }}" -targetRepo "${{ steps.issue_body.outputs.target_repo }}" -sourceToken "${{ secrets.SOURCE_PAT }}" -targetToken "${{ secrets.TARGET_PAT }}"
       shell: pwsh

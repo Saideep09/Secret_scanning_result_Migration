@@ -1,8 +1,8 @@
-name: Migrate Repository-level Secrets scanning results remediation state 
+name: Migrate Repository-Level Secret scanning results remediation state
 
 on:
   issues:
-    types: [opened, edited]
+    types: [opened]
 
 jobs:
   migrate:
@@ -42,6 +42,15 @@ jobs:
         echo "Source Repository: ${{ steps.extract_repos.outputs.sourceRepo }}"
         echo "Target Organization: ${{ steps.extract_repos.outputs.targetOrg }}"
         echo "Target Repository: ${{ steps.extract_repos.outputs.targetRepo }}"
+
+    - name: Run the PowerShell migration script
+      run: |
+        pwsh ./scripts/migrate_secret_states.ps1 -sourceRepo "${{ steps.extract_repos.outputs.sourceOrg }}/${{ steps.extract_repos.outputs.sourceRepo }}" -targetRepo "${{ steps.extract_repos.outputs.targetOrg }}/${{ steps.extract_repos.outputs.targetRepo }}"
+      env:
+        SOURCE_PAT: ${{ secrets.SOURCE_PAT }}
+        TARGET_PAT: ${{ secrets.TARGET_PAT }}
+
+        
  # migration:
  #   runs-on: ubuntu-latest
  #   permissions:

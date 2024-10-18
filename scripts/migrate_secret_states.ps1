@@ -1,11 +1,10 @@
-# Inputs from GitHub Actions workflow
 param (
-    [string]$sourceOrg = $env:SOURCE_ORG,  # Source organization name
-    [string]$sourceRepo = $env:SOURCE_REPO,  # Source repository name
-    [string]$targetOrg = $env:TARGET_ORG,  # Target organization name
-    [string]$targetRepo = $env:TARGET_REPO,  # Target repository name
-    [string]$sourceToken = $env:SOURCE_PAT,  # Source PAT token from GitHub Secrets
-    [string]$targetToken = $env:TARGET_PAT   # Target PAT token from GitHub Secrets
+    [string]$sourceOrg,  # Source organization name
+    [string]$sourceRepo,  # Source repository name
+    [string]$targetOrg,  # Target organization name
+    [string]$targetRepo,  # Target repository name
+    [string]$sourceToken,  # Source PAT token
+    [string]$targetToken   # Target PAT token
 )
 
 # Function to check if secret scanning is enabled in the target repository

@@ -21,6 +21,8 @@ body:
       label: "Source Repository"
       description: "Enter the name of the source Repository"
       placeholder: "e.g., s_repo1"
+    validations:
+      required: true
 
   - type: input
     id: target_org
@@ -36,4 +38,6 @@ body:
     attributes:
       label: "Target Repository"
       description: "Enter the name of the target Repository"
-      placeholder: "e.g., s_repo1"
+      placeholder: "e.g., t_repo1"
+    validations:
+      required: true

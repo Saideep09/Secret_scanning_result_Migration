@@ -1,5 +1,5 @@
 name: "Migrate Repository-Level Secret scanning results remediation state"
-description: "Provide the source and target organization details for the migration."
+description: "Provide the migration's source and target organization details"
 title: "Migrate Secrets scanning results remediation state from {{source_org}} to {{target_org}}"
 labels:
   - migration

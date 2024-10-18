@@ -1,0 +1,51 @@
+name: Migrate Repository-level Secrets scanning results remediation state 
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  migration:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+
+    steps:
+      - name: Get Issue Body
+        id: issue_body
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const issueBody = context.payload.issue.body;
+            console.log("Issue Body: ", issueBody);
+
+            // Use regex to extract organization names
+            const sourceOrgMatch = issueBody.match(/### Source Organization\s*\n*(.*)/);
+            const sourceRepoMatch = issueBody.match(/### Source Repository\s*\n*(.*)/); // Repo-level
+            const targetOrgMatch = issueBody.match(/### Target Organization\s*\n*(.*)/);
+            const targetRepoMatch = issueBody.match(/### Target Repository\s*\n*(.*)/); // Repo-level
+
+            const sourceOrg = sourceOrgMatch ? sourceOrgMatch[1].trim() : "Not provided";
+            const sourceRepo = sourceRepoMatch ? sourceRepoMatch[1].trim() : "Not provided";
+            const targetOrg = targetOrgMatch ? targetOrgMatch[1].trim() : "Not provided";
+            const targetRepo = targetRepoMatch ? targetRepoMatch[1].trim() : "Not provided";
+
+            console.log("Source Organization: ", sourceOrg);
+            console.log("Source Repository: ", sourceRepo);
+            console.log("Target Organization: ", targetOrg);
+            console.log("Target Repository: ", targetRepo);
+
+            core.setOutput("source_org", sourceOrg);
+            core.setOutput("source_repo", sourceRepo);
+            core.setOutput("target_org", targetOrg);
+            core.setOutput("target_repo", targetRepo);
+
+      - name: Print Variables
+        run: |
+          echo "Source Organization: ${{ steps.issue_body.outputs.source_org }}"
+          echo "Source Repository: ${{ steps.issue_body.outputs.source_repo }}"
+          echo "Target Organization: ${{ steps.issue_body.outputs.target_org }}"
+          echo "Target Repository: ${{ steps.issue_body.outputs.target_repo }}"
+
+      

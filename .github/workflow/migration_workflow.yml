@@ -2,7 +2,7 @@ name: Migrate Repository-Level Secret scanning results remediation state
 
 on:
   issues:
-    types: [opened]
+    types: [opened,edited]
 
 jobs:
   migrate:

@@ -30,21 +30,26 @@ jobs:
     - name: Extract source and target organization and repository from issue
       id: extract_repos
       run: |
-        echo "::set-output name=sourceOrg::$(echo '${{ github.event.issue.body }}' | grep 'Source Organization' | sed 's/Source Organization.*: //')"
-        echo "::set-output name=sourceRepo::$(echo '${{ github.event.issue.body }}' | grep 'Source Repository' | sed 's/Source Repository.*: //')"
-        echo "::set-output name=targetOrg::$(echo '${{ github.event.issue.body }}' | grep 'Target Organization' | sed 's/Target Organization.*: //')"
-        echo "::set-output name=targetRepo::$(echo '${{ github.event.issue.body }}' | grep 'Target Repository' | sed 's/Target Repository.*: //')"
+        sourceOrg=$(echo "${{ github.event.issue.body }}" | awk '/### Source Organization/{getline; print}')
+        sourceRepo=$(echo "${{ github.event.issue.body }}" | awk '/### Source Repository/{getline; print}')
+        targetOrg=$(echo "${{ github.event.issue.body }}" | awk '/### Target Organization/{getline; print}')
+        targetRepo=$(echo "${{ github.event.issue.body }}" | awk '/### Target Repository/{getline; print}')
+
+        echo "sourceOrg=$sourceOrg" >> $GITHUB_ENV
+        echo "sourceRepo=$sourceRepo" >> $GITHUB_ENV
+        echo "targetOrg=$targetOrg" >> $GITHUB_ENV
+        echo "targetRepo=$targetRepo" >> $GITHUB_ENV
 
     - name: Print inputs
       run: |
-        echo "Source Organization: ${{ steps.extract_repos.outputs.sourceOrg }}"
-        echo "Source Repository: ${{ steps.extract_repos.outputs.sourceRepo }}"
-        echo "Target Organization: ${{ steps.extract_repos.outputs.targetOrg }}"
-        echo "Target Repository: ${{ steps.extract_repos.outputs.targetRepo }}"
+        echo "Source Organization: ${{ env.sourceOrg }}"
+        echo "Source Repository: ${{ env.sourceRepo }}"
+        echo "Target Organization: ${{ env.targetOrg }}"
+        echo "Target Repository: ${{ env.targetRepo }}"
 
     - name: Run the PowerShell migration script
       run: |
-        pwsh ./scripts/migrate_secret_states.ps1 -sourceRepo "${{ steps.extract_repos.outputs.sourceOrg }}/${{ steps.extract_repos.outputs.sourceRepo }}" -targetRepo "${{ steps.extract_repos.outputs.targetOrg }}/${{ steps.extract_repos.outputs.targetRepo }}"
+        pwsh ./scripts/migrate_secret_states.ps1 -sourceRepo "${{ env.sourceOrg }}/${{ env.sourceRepo }}" -targetRepo "${{ env.targetOrg }}/${{ env.targetRepo }}"
       env:
         SOURCE_PAT: ${{ secrets.SOURCE_PAT }}
         TARGET_PAT: ${{ secrets.TARGET_PAT }}

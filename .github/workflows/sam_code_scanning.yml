@@ -1,0 +1,33 @@
+
+name: Migrate Code Scanning Alerts
+
+on:
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  migrate_sarif:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install jq (if not available)
+        run: sudo apt-get install -y jq
+
+      - name: Create SARIF directory
+        run: mkdir -p sarif_reports
+
+      - name: List and download SARIF files from the source repository
+        run: |
+          # List all analysis runs and retrieve each SARIF file
+          analysis_ids=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses" -H "Authorization: token ${{ secrets.SOURCE_TOKEN }}" | jq -r '.[].id')
+          for analysis_id in $analysis_ids; do
+            gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" -H "Authorization: token ${{ secrets.SOURCE_TOKEN }}" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
+            echo "Downloaded SARIF for analysis ID: $analysis_id"
+          done
+
+      - name: Upload SARIF artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sarif-reports
+          path: sarif_reports/

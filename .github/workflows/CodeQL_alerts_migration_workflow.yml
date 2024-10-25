@@ -29,9 +29,9 @@ jobs:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # List all analysis runs and retrieve each SARIF file
-          analysis_ids=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses" -H "Authorization: token $GH_TOKEN" | jq -r '.[].id')
+          analysis_ids=$(gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses" -H "Authorization: token $GH_TOKEN" | jq -r '.[].id')
           for analysis_id in $analysis_ids; do
-            gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" -H "Authorization: token $GH_TOKEN" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
+            gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses/$analysis_id" -H "Authorization: token $GH_TOKEN" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
             echo "Downloaded SARIF for analysis ID: $analysis_id"
           done
 
@@ -40,8 +40,9 @@ jobs:
         with:
           name: sarif-reports
           path: sarif_reports/
+          
   upload_to_target_repo:
-    needs: migrate_sarif  # Ensures the second job runs after SARIF files are downloaded
+    needs: Downloading_from_source  # Ensures the second job runs after SARIF files are downloaded
     runs-on: ubuntu-latest
 
     steps:
@@ -61,7 +62,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="target-owner/target-repo"  # Replace with the target repository (e.g., "my-org/my-duplicate-repo")
+          TARGET_REPO="sam-org2/s_repo3"  # Replace with the target repository (e.g., "my-org/my-duplicate-repo")
           
           # Loop through each SARIF file and upload it to the target repository
           for sarif_file in sarif_reports/*.sarif; do

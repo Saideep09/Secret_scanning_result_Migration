@@ -16,12 +16,14 @@ jobs:
       - name: Create SARIF directory
         run: mkdir -p sarif_reports
 
-      - name: Authenticate with GitHub CLI
+      - name: Set up GitHub CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install gh
         env:
-          GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
-        run: gh auth login --with-token <<< "${{ secrets.SOURCE_TOKEN }}"
-
-      - name: List and download SARIF files from source repository
+          GH_TOKEN: ${{ github.token }}
+          
+      - name: List and download SARIF files from the source repository
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |

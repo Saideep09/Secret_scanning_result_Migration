@@ -22,28 +22,8 @@ jobs:
         id: download_sarif
         run: |
           # List all analysis runs and retrieve each SARIF file
-          analysis_ids=$(gh api -X GET /repos/${{ github.repository }}/code-scanning/analyses | jq -r '.[].id')
+          analysis_ids=$(gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/analyses | jq -r '.[].id')
           for analysis_id in $analysis_ids; do
-            gh api -X GET /repos/${{ github.repository }}/code-scanning/analyses/$analysis_id --jq '.sarif' > sarif_reports/analysis_${analysis_id}.sarif
+            gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id --jq '.sarif' > sarif_reports/analysis_${analysis_id}.sarif
             echo "Downloaded SARIF for analysis ID: $analysis_id"
-          done
-
-      - name: Upload SARIF files to target repository
-        env:
-          GH_TOKEN: ${{ secrets.TARGET_REPO_TOKEN }}
-        run: |
-          # Define the target repository
-          TARGET_REPO="target-owner/target-repo"  # Replace with target repository (e.g., "my-org/my-duplicate-repo")
-
-          # Loop through each SARIF file and upload it to the target repository
-          for sarif_file in sarif_reports/*.sarif; do
-            echo "Uploading $sarif_file to $TARGET_REPO"
-            gh api -X POST \
-              -H "Authorization: token $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              /repos/$TARGET_REPO/code-scanning/sarifs \
-              -F "commit_sha=$(git rev-parse HEAD)" \
-              -F "ref=refs/heads/main" \
-              -F "sarif=@$sarif_file" \
-              -F "checkout_uri=$(pwd)"
           done

@@ -5,7 +5,7 @@ on:
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
-  migrate_sarif:
+  Downloading_from_source:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -40,3 +40,38 @@ jobs:
         with:
           name: sarif-reports
           path: sarif_reports/
+  upload_to_target_repo:
+    needs: migrate_sarif  # Ensures the second job runs after SARIF files are downloaded
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download SARIF artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: sarif-reports
+          path: sarif_reports/
+
+      - name: Authenticate with GitHub CLI for target repository
+        env:
+          GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
+        run: |
+          echo "${GH_TOKEN}" | gh auth login --with-token
+
+      - name: Upload SARIF files to target repository
+        env:
+          GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
+        run: |
+          TARGET_REPO="target-owner/target-repo"  # Replace with the target repository (e.g., "my-org/my-duplicate-repo")
+          
+          # Loop through each SARIF file and upload it to the target repository
+          for sarif_file in sarif_reports/*.sarif; do
+            echo "Uploading $sarif_file to $TARGET_REPO"
+            gh api -X POST \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$TARGET_REPO/code-scanning/sarifs" \
+              -F "commit_sha=$(git rev-parse HEAD)" \
+              -F "ref=refs/heads/main" \
+              -F "sarif=@$sarif_file" \
+              -F "checkout_uri=$(pwd)"
+          done

@@ -42,7 +42,18 @@ jobs:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
           TARGET_REPO="saideep11112/target1"
-          latest_commit_sha=$(gh api -X GET "/repos/$TARGET_REPO/commits/main" --jq '.sha')
+          TARGET_BRANCH=$(gh api -X GET "/repos/$TARGET_REPO" --jq '.default_branch')
+
+          # Check if the branch has commits; fetch the latest commit SHA if available
+          latest_commit_sha=$(gh api -X GET "/repos/$TARGET_REPO/commits/$TARGET_BRANCH" --jq '.sha' || echo "null")
+          
+          # If no commit SHA is found, print a message and exit gracefully
+          if [ "$latest_commit_sha" == "null" ]; then
+            echo "No commits found on the branch $TARGET_BRANCH. Please add a commit to proceed."
+            exit 1
+          fi
+
+          # Save commit SHA to environment variable
           echo "LATEST_COMMIT_SHA=$latest_commit_sha" >> $GITHUB_ENV
 
       - name: Format and upload alerts as SARIF to target repository
@@ -91,6 +102,6 @@ jobs:
               -H "Accept: application/vnd.github+json" \
               "/repos/$TARGET_REPO/code-scanning/sarifs" \
               -F "commit_sha=$LATEST_COMMIT_SHA" \
-              -F "ref=refs/heads/main" \
+              -F "ref=refs/heads/$TARGET_BRANCH" \
               -F "sarif=@-"
           done

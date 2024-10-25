@@ -29,31 +29,61 @@ jobs:
         run: |
           gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/alerts
 
-      - name: Download and validate SARIF files from Code Scanning Alerts
+      
+      - name: Fetch alerts from source repository
+        id: fetch_alerts
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
-          # Fetch list of analysis IDs
-          analysis_ids=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses" --jq '.[].id')
+          # Get alerts from the source repository and save them to alerts.json
+          gh api -X GET "/repos/source-owner/source-repo/code-scanning/alerts" > alerts.json
 
-          # Download each SARIF file by analysis ID and validate
-          for analysis_id in $analysis_ids; do
-            echo "Fetching SARIF for analysis ID: $analysis_id"
-            
-            # Save the SARIF JSON content
-            sarif_data=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" | jq '.sarif')
-            
-            # Check if SARIF data is not empty
-            if [ "$sarif_data" != "null" ]; then
-              echo "$sarif_data" > "sarif_reports/analysis_${analysis_id}.sarif"
-              echo "SARIF file saved for analysis ID: $analysis_id"
-            else
-              echo "No SARIF data found for analysis ID: $analysis_id"
-            fi
+      - name: Format and upload alerts as SARIF to target repository
+        env:
+          GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
+        run: |
+          TARGET_REPO="target-owner/target-repo"
+
+          # Loop over each alert and convert to SARIF format for upload
+          cat alerts.json | jq -c '.[]' | while read -r alert; do
+            sarif=$(jq -n \
+              --argjson alert "$alert" \
+              '{
+                "version": "2.1.0",
+                "$schema": "https://schemastore.azurewebsites.net/schemas/json/sarif-2.1.0-rtm.5.json",
+                "runs": [{
+                  "tool": {
+                    "driver": {
+                      "name": "Manual Alert Migration",
+                      "rules": [{
+                        "id": $alert.rule.id,
+                        "name": $alert.rule.name,
+                        "fullDescription": { "text": $alert.rule.full_description },
+                        "help": { "text": $alert.rule.help },
+                        "properties": { "tags": $alert.rule.tags }
+                      }]
+                    }
+                  },
+                  "results": [{
+                    "ruleId": $alert.rule.id,
+                    "level": $alert.rule.severity,
+                    "message": { "text": $alert.rule.description },
+                    "locations": [{
+                      "physicalLocation": {
+                        "artifactLocation": { "uri": $alert.location.path },
+                        "region": { "startLine": ($alert.location.start_line // 1) }
+                      }
+                    }]
+                  }]
+                }]
+              }')
+
+            # Upload SARIF data to the target repository
+            echo "$sarif" | gh api -X POST \
+              -H "Authorization: token $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "/repos/$TARGET_REPO/code-scanning/sarifs" \
+              -F "commit_sha=$(git rev-parse HEAD)" \
+              -F "ref=refs/heads/main" \
+              -F "sarif=@-"
           done
-
-      - name: Upload SARIF files as Artifacts
-        uses: actions/upload-artifact@v3
-        with:
-          name: sarif-reports
-          path: sarif_reports/

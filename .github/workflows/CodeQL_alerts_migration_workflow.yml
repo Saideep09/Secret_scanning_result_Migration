@@ -35,7 +35,7 @@ jobs:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # Get alerts from the source repository and save them to alerts.json
-          gh api -X GET "/repos/source-owner/source-repo/code-scanning/alerts" > alerts.json
+          gh api -X GET "/repos/saideep11111/source1/code-scanning/alerts" > alerts.json
 
       - name: Format and upload alerts as SARIF to target repository
         env:

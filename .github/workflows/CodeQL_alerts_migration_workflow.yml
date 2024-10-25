@@ -27,8 +27,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
-          gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/alerts
-
+          gh api -X GET /repos/saideep11111/source1/code-scanning/alerts
       
       - name: Fetch alerts from source repository
         id: fetch_alerts
@@ -42,7 +41,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="target-owner/target-repo"
+          TARGET_REPO="saideep11112/target1"
 
           # Loop over each alert and convert to SARIF format for upload
           cat alerts.json | jq -c '.[]' | while read -r alert; do

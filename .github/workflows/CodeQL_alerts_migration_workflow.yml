@@ -29,17 +29,27 @@ jobs:
         run: |
           gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/alerts
 
-      - name: Download SARIF files from Code Scanning Alerts
+      - name: Download and validate SARIF files from Code Scanning Alerts
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # Fetch list of analysis IDs
           analysis_ids=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses" --jq '.[].id')
-          
-          # Download each SARIF file by analysis ID
+
+          # Download each SARIF file by analysis ID and validate
           for analysis_id in $analysis_ids; do
-            echo "Downloading SARIF for analysis ID: $analysis_id"
-            gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
+            echo "Fetching SARIF for analysis ID: $analysis_id"
+            
+            # Save the SARIF JSON content
+            sarif_data=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" | jq '.sarif')
+            
+            # Check if SARIF data is not empty
+            if [ "$sarif_data" != "null" ]; then
+              echo "$sarif_data" > "sarif_reports/analysis_${analysis_id}.sarif"
+              echo "SARIF file saved for analysis ID: $analysis_id"
+            else
+              echo "No SARIF data found for analysis ID: $analysis_id"
+            fi
           done
 
       - name: Upload SARIF files as Artifacts

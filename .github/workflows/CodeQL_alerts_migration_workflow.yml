@@ -1,3 +1,4 @@
+
 name: Migrate Code Scanning Alerts
 
 on:
@@ -33,3 +34,9 @@ jobs:
             gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" -H "Authorization: token $GH_TOKEN" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
             echo "Downloaded SARIF for analysis ID: $analysis_id"
           done
+
+      - name: Upload SARIF artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: sarif-reports
+          path: sarif_reports/

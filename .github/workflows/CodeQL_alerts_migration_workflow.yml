@@ -37,12 +37,20 @@ jobs:
           # Get alerts from the source repository and save them to alerts.json
           gh api -X GET "/repos/saideep11111/source1/code-scanning/alerts" > alerts.json
 
+      - name: Get Latest Commit SHA from Target Repository
+        env:
+          GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
+        run: |
+          TARGET_REPO="saideep11112/target1"
+          latest_commit_sha=$(gh api -X GET "/repos/$TARGET_REPO/commits/main" --jq '.sha')
+          echo "LATEST_COMMIT_SHA=$latest_commit_sha" >> $GITHUB_ENV
+
       - name: Format and upload alerts as SARIF to target repository
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
           TARGET_REPO="saideep11112/target1"
-
+          
           # Loop over each alert and convert to SARIF format for upload
           cat alerts.json | jq -c '.[]' | while read -r alert; do
             sarif=$(jq -n \
@@ -77,12 +85,12 @@ jobs:
                 }]
               }')
 
-            # Upload SARIF data to the target repository
+            # Upload SARIF data to the target repository using the latest commit SHA
             echo "$sarif" | gh api -X POST \
               -H "Authorization: token $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "/repos/$TARGET_REPO/code-scanning/sarifs" \
-              -F "commit_sha=$(git rev-parse HEAD)" \
+              -F "commit_sha=$LATEST_COMMIT_SHA" \
               -F "ref=refs/heads/main" \
               -F "sarif=@-"
           done

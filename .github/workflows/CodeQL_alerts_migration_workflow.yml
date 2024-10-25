@@ -17,13 +17,12 @@ jobs:
         run: mkdir -p sarif_reports
 
       - name: Set up GitHub CLI
-        env:
-          GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           sudo apt-get update
-          sudo apt-get install -y gh
-          echo "${GH_TOKEN}" | gh auth login --with-token
-          
+          sudo apt-get install -y
+        env:
+          GH_TOKEN: ${{ secrets.SOURCE_TOKEN }} 
+      
       - name: List and download SARIF files from the source repository
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}

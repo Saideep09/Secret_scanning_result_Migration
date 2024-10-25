@@ -27,5 +27,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
-          gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/alerts
+          gh api -X GET /repos/Saideep09/zxing-sample-java/code-scanning/alerts
          

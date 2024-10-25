@@ -19,7 +19,7 @@ jobs:
       - name: Authenticate with GitHub CLI
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
-        run: gh auth login --with-token <<< "$GH_TOKEN"
+        run: gh auth login --with-token <<< "${{ secrets.SOURCE_TOKEN }}"
 
       - name: List and download SARIF files from source repository
         env:

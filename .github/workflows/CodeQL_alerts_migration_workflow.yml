@@ -27,18 +27,5 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
-          gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses
-          # List all analysis runs and retrieve each SARIF file
-          #analysis_ids=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses" --jq '.[].id')
-          #for analysis_id in $analysis_ids; do
-            # Download the SARIF data and save it correctly
-           # sarif_data=$(gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/analyses/$analysis_id" --jq '.sarif')
-            #echo "$sarif_data" > "sarif_reports/analysis_${analysis_id}.sarif"
-            #echo "Downloaded SARIF for analysis ID: $analysis_id"
-         # done
-
-      #- name: Upload SARIF artifacts
-      #  uses: actions/upload-artifact@v3
-       # with:
-        #  name: sarif-reports
-         # path: sarif_reports/
+          gh api -X GET "/repos/Saideep09/zxing-sample-java/code-scanning/alerts
+         

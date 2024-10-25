@@ -1,4 +1,3 @@
-
 name: Migrate Code Scanning Alerts
 
 on:
@@ -18,20 +17,23 @@ jobs:
         run: mkdir -p sarif_reports
 
       - name: Set up GitHub CLI
-        run: |
-          sudo apt-get update
-          sudo apt-get install gh
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gh
+          echo "${GH_TOKEN}" | gh auth login --with-token
           
       - name: List and download SARIF files from the source repository
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # List all analysis runs and retrieve each SARIF file
-          analysis_ids=$(gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses" -H "Authorization: token $GH_TOKEN" | jq -r '.[].id')
+          analysis_ids=$(gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses" --jq '.[].id')
           for analysis_id in $analysis_ids; do
-            gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses/$analysis_id" -H "Authorization: token $GH_TOKEN" --jq '.sarif' > "sarif_reports/analysis_${analysis_id}.sarif"
+            # Download the SARIF data and save it correctly
+            sarif_data=$(gh api -X GET "/repos/sam-org1/s_repo1/code-scanning/analyses/$analysis_id" --jq '.sarif')
+            echo "$sarif_data" > "sarif_reports/analysis_${analysis_id}.sarif"
             echo "Downloaded SARIF for analysis ID: $analysis_id"
           done
 
@@ -40,5 +42,3 @@ jobs:
         with:
           name: sarif-reports
           path: sarif_reports/
-          
-  

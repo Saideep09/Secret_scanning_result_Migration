@@ -56,13 +56,13 @@ jobs:
           # Save commit SHA to environment variable
           echo "LATEST_COMMIT_SHA=$latest_commit_sha" >> $GITHUB_ENV
 
-      - name: Format and upload alerts as SARIF to target repository
+      - name: Format, compress, and encode alerts as SARIF for upload to target repository
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
           TARGET_REPO="saideep11112/target1"
           
-          # Loop over each alert and convert to SARIF format for upload
+          # Loop over each alert, convert to SARIF format, gzip, and base64 encode
           cat alerts.json | jq -c '.[]' | while read -r alert; do
             sarif=$(jq -n \
               --argjson alert "$alert" \
@@ -96,12 +96,21 @@ jobs:
                 }]
               }')
 
+            # Save SARIF content to a file
+            echo "$sarif" > temp.sarif
+            
+            # Compress the SARIF file
+            gzip -c temp.sarif > temp.sarif.gz
+            
+            # Base64 encode the compressed SARIF file
+            sarif_base64=$(base64 -w 0 temp.sarif.gz)
+            
             # Upload SARIF data to the target repository using the latest commit SHA
-            echo "$sarif" | gh api -X POST \
+            gh api -X POST \
               -H "Authorization: token $GH_TOKEN" \
               -H "Accept: application/vnd.github+json" \
               "/repos/$TARGET_REPO/code-scanning/sarifs" \
               -F "commit_sha=$LATEST_COMMIT_SHA" \
               -F "ref=refs/heads/$TARGET_BRANCH" \
-              -F "sarif=@-"
+              -F "sarif=$sarif_base64"
           done

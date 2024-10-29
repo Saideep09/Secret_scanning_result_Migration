@@ -4,8 +4,9 @@ on:
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
-  Downloading_from_source:
+  migrate_sarif:
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
@@ -19,23 +20,17 @@ jobs:
       - name: Set up GitHub CLI
         run: |
           sudo apt-get update
-          sudo apt-get install -y
-        env:
-          GH_TOKEN: ${{ secrets.SOURCE_TOKEN }} 
-      
-      - name: List and download SARIF files from the source repository
+          sudo apt-get install -y gh
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
-        run: |
-          gh api -X GET /repos/saideep11111/source2/code-scanning/alerts
-      
+
       - name: Fetch alerts from source repository
-        id: fetch_alerts
         env:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # Get alerts from the source repository and save them to alerts.json
           gh api -X GET "/repos/saideep11111/source2/code-scanning/alerts" > alerts.json
+          echo "Alerts downloaded and saved to alerts.json"
 
       - name: Get Latest Commit SHA and Target Branch from Target Repository
         env:
@@ -116,4 +111,5 @@ jobs:
               -F "commit_sha=$LATEST_COMMIT_SHA" \
               -F "ref=refs/heads/$TARGET_BRANCH" \
               -F "sarif=$sarif_base64"
+            echo "Uploaded SARIF for alert"
           done

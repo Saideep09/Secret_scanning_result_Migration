@@ -2,6 +2,11 @@
 $SOURCE_REPO = "saideep11111/source2"   # Replace with your source repo
 $TARGET_REPO = "saideep11112/source2"   # Replace with your target repo
 $TARGET_REF = "refs/heads/main"         # Target branch reference
+$GITHUB_TOKEN = "your_github_token_here" # Replace with your GitHub token
+
+# Authenticate with GitHub CLI
+Write-Output "Authenticating with GitHub CLI..."
+gh auth login --with-token <<< "$GITHUB_TOKEN"
 
 # Retrieve the latest commit SHA for the target branch in the target repository
 Write-Output "Retrieving the latest commit SHA for the target repository..."

@@ -29,14 +29,14 @@ jobs:
           GH_TOKEN: ${{ secrets.SOURCE_TOKEN }}
         run: |
           # Get alerts from the source repository and save them to alerts.json
-          gh api -X GET "/repos/saideep11111/source2/code-scanning/alerts" > alerts.json
+          gh api -X GET "/repos/saideep11111/S1/code-scanning/alerts" > alerts.json
           echo "Alerts downloaded and saved to alerts.json"
 
       - name: Get Latest Commit SHA and Target Branch from Target Repository
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="saideep11112/s2"
+          TARGET_REPO="saideep11112/S1"
           
           # Retrieve the default branch, with a fallback to 'main'
           TARGET_BRANCH=$(gh api -X GET "/repos/$TARGET_REPO" --jq '.default_branch' || echo "main")
@@ -58,7 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="saideep11112/s2"
+          TARGET_REPO="saideep11112/S1"
           
           # Loop over each alert, convert to SARIF format, gzip, and base64 encode
           cat alerts.json | jq -c '.[]' | while read -r alert; do

@@ -36,7 +36,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="saideep11112/S1"
+          TARGET_REPO="saideep11112/S2"
           
           # Retrieve the default branch, with a fallback to 'main'
           TARGET_BRANCH=$(gh api -X GET "/repos/$TARGET_REPO" --jq '.default_branch' || echo "main")
@@ -58,7 +58,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.TARGET_TOKEN }}
         run: |
-          TARGET_REPO="saideep11112/S1"
+          TARGET_REPO="saideep11112/S2"
           
           # Loop over each alert, convert to SARIF format, gzip, and base64 encode
           cat alerts.json | jq -c '.[]' | while read -r alert; do
